@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Enum
+from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
+from enum import Enum
 from database import Base
 
 
@@ -7,7 +8,6 @@ class Object(Base):
     __tablename__ = "object"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(255), nullable=False)
     color = Column(String(255), nullable=False)
     weight = Column(Integer, nullable=False)
     price = Column(Integer, nullable=False)
@@ -24,7 +24,7 @@ class Address(Base):
     orders = relationship("Order", back_populates="address")
 
 
-class OrderStatus(Enum):
+class OrderStatus(str, Enum):
     PENDING = "pending"
     COMPLETED = "completed"
     CANCELLED = "cancelled"
@@ -35,7 +35,7 @@ class Order(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     quantity = Column(Integer, nullable=False)
-    status = Column(Enum(OrderStatus), nullable=False, default=OrderStatus.PENDING)
+    status = Column(String(length=50), nullable=False, default=OrderStatus.PENDING.value)
 
     address_id = Column(Integer, ForeignKey("address.id"))
     address = relationship("Address", back_populates="orders")
