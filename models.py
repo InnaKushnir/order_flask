@@ -4,17 +4,16 @@ from enum import Enum
 from database import Base
 
 
-class Object(Base):
-    __tablename__ = "object"
+class Product(Base):
+    __tablename__ = "product"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String (255), nullable=False)
+    name = Column(String(255), nullable=False)
     color = Column(String(255), nullable=False)
     weight = Column(Integer, nullable=False)
     price = Column(Integer, nullable=False)
 
-    orderitems = relationship("OrderItem", back_populates="object")
-
+    productitems = relationship("OrderItem", back_populates="product")
 
 class SubAddress(Base):
     __tablename__ = "sub_address"
@@ -49,10 +48,9 @@ class Order(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     status = Column(String(length=50), nullable=False, default=OrderStatus.PENDING.value)
-
-    orderitems = relationship("OrderItem", back_populates="order")
     address_id = Column(Integer, ForeignKey("address.id"))
     address = relationship("Address", back_populates="orders")
+    productitems = relationship("OrderItem", back_populates="order")
 
 
 class OrderItem(Base):
@@ -60,7 +58,7 @@ class OrderItem(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     quantity = Column(Integer, nullable=False)
-    object_id = Column(Integer, ForeignKey("object.id"))
     order_id = Column(Integer, ForeignKey("order.id"))
-    order = relationship("Order", back_populates="orderitems")
-    object = relationship("Object", back_populates="orderitems")
+    order = relationship("Order", back_populates="productitems")
+    product_id = Column(Integer, ForeignKey("product.id"))
+    product = relationship("Product", back_populates="productitems")

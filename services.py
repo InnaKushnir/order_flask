@@ -1,28 +1,25 @@
 from sqlalchemy.orm import Session
 
 import models
-from models import Object
-from schemas import ObjectCreate
 import schemas
 
 
-def get_all_objects(db: Session):
-    return db.query(models.Object).all()
+def get_all_products(db: Session):
+    return db.query(models.Product).all()
 
 
-def get_object_by_id(db: Session, object_id: int):
-    return db.query(models.Object).filter(models.Object.id == object_id).first()
+def get_product_by_id(db: Session, product_id: int):
+    return db.query(models.Product).filter(models.Product.id == product_id).first()
 
 
-def object_create(db: Session, obj: schemas.ObjectCreate):
-    db_object = models.Object(
+def product_create(db: Session, obj: schemas.ProductCreate):
+    db_product = models.Product(
         name=obj.name,
         color=obj.color,
         weight=obj.weight,
         price=obj.price,
     )
-    db.add(db_object)
+    db.add(db_product)
     db.commit()
-    db.refresh(db_object)
-    return db_object
-
+    db.refresh(db_product)
+    return db_product

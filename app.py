@@ -16,7 +16,7 @@ app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://user:password@localhost
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
-from models import Object, Address, Order, OrderStatus, SubAddress
+from models import Product, Address, Order, OrderStatus, SubAddress
 
 
 def get_db():
@@ -38,45 +38,45 @@ def hello_world():
     return 'Hello World!'
 
 
-@app.route("/objects/", methods=["GET"])
+@app.route("/products/", methods=["GET"])
 def get_objects():
     with get_db() as db:
-        objects = services.get_all_objects(db)
-        object_dicts = [{"id": obj.id, "name": obj.name, "color": obj.color, "weight": obj.weight, "price": obj.price} for obj in objects]
-        return object_dicts
+        products = services.get_all_products(db)
+        products_dicts = [{"id": prod.id, "name": prod.name, "color": prod.color, "weight": prod.weight, "price": prod.price} for prod in products]
+        return products_dicts
 
 
-@app.route("/objects/<int:object_id>/", methods=["GET"])
-def get_object_by_id(object_id: int):
+@app.route("/products/<int:product_id>/", methods=["GET"])
+def get_object_by_id(product_id: int):
     with get_db() as db:
-        obj = services.get_object_by_id(db, object_id)
-        if obj is None:
+        prod = services.get_product_by_id(db, product_id)
+        if prod is None:
             return {"error": "Object not found"}, 404
-        object_dict = {"id": obj.id, "name": obj.name, "color": obj.color, "weight": obj.weight, "price": obj.price}
-        return object_dict
+        product_dict = {"id": prod.id, "name": prod.name, "color": prod.color, "weight": prod.weight, "price": prod.price}
+        return product_dict
 
 
-@app.post("/objects/")
+@app.post("/products/")
 def create_object_route():
     with get_db() as db:
-        obj_data = request.get_json()
+        prod_data = request.get_json()
 
         try:
-            obj_create = schemas.ObjectCreate(**obj_data)
+            product_create = schemas.ProductCreate(**prod_data)
         except ValueError as e:
             return jsonify({"error": "Invalid data format"}), 400
 
-        new_object = services.object_create(db, obj_create)
+        new_product = services.product_create(db, product_create)
 
-        serialized_object = {
-            "id": new_object.id,
-            "name": new_object.name,
-            "color": new_object.color,
-            "weight": new_object.weight,
-            "price": new_object.price
+        serialized_product = {
+            "id": new_product.id,
+            "name": new_product.name,
+            "color": new_product.color,
+            "weight": new_product.weight,
+            "price": new_product.price
         }
 
-        return jsonify(serialized_object)
+        return jsonify(serialized_product)
 
 
 if __name__ == '__main__':

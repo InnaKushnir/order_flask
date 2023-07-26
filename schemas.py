@@ -2,7 +2,7 @@
 from pydantic import BaseModel
 
 
-class ObjectBase(BaseModel):
+class ProductBase(BaseModel):
     id: int
     name: str
     color: str
@@ -13,11 +13,11 @@ class ObjectBase(BaseModel):
         orm_mode = True
 
 
-class ObjectCreate(ObjectBase):
+class ProductCreate(ProductBase):
     pass
 
 
-class Object(ObjectBase):
+class Product(ProductBase):
     id: int
 
     class Config:
