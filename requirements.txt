@@ -18,8 +18,10 @@ mypy==1.4.1
 mypy-extensions==1.0.0
 mysqlclient==2.2.0
 pycparser==2.21
+pydentic==0.0.1.dev3
 PyMySQL==1.1.0
 python-dotenv==1.0.0
+python-stdnum==1.18
 SQLAlchemy==2.0.19
 sqlalchemy-stubs==0.4
 tomli==2.0.1

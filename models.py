@@ -8,9 +8,22 @@ class Object(Base):
     __tablename__ = "object"
 
     id = Column(Integer, primary_key=True, index=True)
+    name = Column(String (255), nullable=False)
     color = Column(String(255), nullable=False)
     weight = Column(Integer, nullable=False)
     price = Column(Integer, nullable=False)
+
+    orderitems = relationship("OrderItem", back_populates="object")
+
+
+class SubAddress(Base):
+    __tablename__ = "sub_address"
+
+    id = Column(Integer, primary_key=True, index=True)
+    sub_address_details = Column(String(255), nullable=False)
+
+    main_address_id = Column(Integer, ForeignKey("address.id"))
+    main_address = relationship("Address", back_populates="sub_addresses")
 
 
 class Address(Base):
@@ -22,6 +35,7 @@ class Address(Base):
     street = Column(String(255), nullable=False)
 
     orders = relationship("Order", back_populates="address")
+    sub_addresses = relationship("SubAddress", back_populates="main_address")
 
 
 class OrderStatus(str, Enum):
@@ -34,9 +48,19 @@ class Order(Base):
     __tablename__ = "order"
 
     id = Column(Integer, primary_key=True, index=True)
-    quantity = Column(Integer, nullable=False)
     status = Column(String(length=50), nullable=False, default=OrderStatus.PENDING.value)
 
+    orderitems = relationship("OrderItem", back_populates="order")
     address_id = Column(Integer, ForeignKey("address.id"))
     address = relationship("Address", back_populates="orders")
 
+
+class OrderItem(Base):
+    __tablename__ = "orderitem"
+
+    id = Column(Integer, primary_key=True, index=True)
+    quantity = Column(Integer, nullable=False)
+    object_id = Column(Integer, ForeignKey("object.id"))
+    order_id = Column(Integer, ForeignKey("order.id"))
+    order = relationship("Order", back_populates="orderitems")
+    object = relationship("Object", back_populates="orderitems")
