@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: 07253d48e7cd
+Revision ID: b9abf11e6c0d
 Revises: 
-Create Date: 2023-07-26 23:23:41.117211
+Create Date: 2023-07-28 18:07:45.231703
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '07253d48e7cd'
+revision = 'b9abf11e6c0d'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -39,6 +39,13 @@ def upgrade():
     with op.batch_alter_table('product', schema=None) as batch_op:
         batch_op.create_index(batch_op.f('ix_product_id'), ['id'], unique=False)
 
+    op.create_table('users',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('username', sa.String(length=100), nullable=False),
+    sa.Column('password', sa.String(length=100), nullable=False),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('username')
+    )
     op.create_table('order',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('status', sa.String(length=50), nullable=False),
@@ -88,6 +95,7 @@ def downgrade():
         batch_op.drop_index(batch_op.f('ix_order_id'))
 
     op.drop_table('order')
+    op.drop_table('users')
     with op.batch_alter_table('product', schema=None) as batch_op:
         batch_op.drop_index(batch_op.f('ix_product_id'))
 
