@@ -18,6 +18,7 @@ def product_create(db: Session, prod: schemas.ProductCreate):
         color=prod.color,
         weight=prod.weight,
         price=prod.price,
+        inventory=prod.inventory
     )
     db.add(db_product)
     db.commit()

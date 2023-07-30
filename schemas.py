@@ -16,7 +16,7 @@ class ProductBase(BaseModel):
 
 
 class ProductCreate(ProductBase):
-    pass
+    inventory: int
 
 
 class Product(ProductBase):

@@ -86,7 +86,7 @@ def get_products():
     with get_db() as db:
         products = services.get_all_products(db)
         products_dicts = [
-            {"id": prod.id, "name": prod.name, "color": prod.color, "weight": prod.weight, "price": prod.price} for prod
+            {"id": prod.id, "name": prod.name, "color": prod.color, "weight": prod.weight, "price": prod.price, "inventory": prod.inventory} for prod
             in products]
         return products_dicts
 
@@ -99,7 +99,7 @@ def get_product_by_id(product_id: int):
         if prod is None:
             return {"error": "Object not found"}, 404
         product_dict = {"id": prod.id, "name": prod.name, "color": prod.color, "weight": prod.weight,
-                        "price": prod.price}
+                        "price": prod.price, "inventory": prod.inventory}
         return product_dict
 
 
@@ -121,7 +121,8 @@ def create_product():
             "name": new_product.name,
             "color": new_product.color,
             "weight": new_product.weight,
-            "price": new_product.price
+            "price": new_product.price,
+            "inventory": new_product.inventory,
         }
 
         return jsonify(serialized_product)
@@ -149,7 +150,8 @@ def update_product(product_id: int):
             "name": updated_product.name,
             "color": updated_product.color,
             "weight": updated_product.weight,
-            "price": updated_product.price
+            "price": updated_product.price,
+            "inventory": updated_product.inventory,
         }
 
         return jsonify(serialized_product)
