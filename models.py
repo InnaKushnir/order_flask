@@ -39,6 +39,7 @@ class Product(Base):
 
     productitems = relationship("OrderItem", back_populates="product")
 
+
 class SubAddress(Base):
     __tablename__ = "sub_address"
 

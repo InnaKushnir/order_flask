@@ -1,5 +1,4 @@
-
-from pydantic import BaseModel, SecretStr
+from pydantic import BaseModel, SecretStr, NonNegativeInt, NonNegativeFloat
 from typing import List, Optional
 
 
@@ -7,21 +6,20 @@ class ProductBase(BaseModel):
     id: int
     name: str
     color: str
-    weight: int
-    price: int
-    inventory: int
+    weight: NonNegativeFloat
+    price: NonNegativeFloat
+    inventory: NonNegativeInt
 
     class Config:
         orm_mode = True
 
 
 class ProductCreate(ProductBase):
-    inventory: int
+    pass
 
 
 class Product(ProductBase):
     id: int
-    inventory: int
 
     class Config:
         orm_mode = True
@@ -79,13 +77,10 @@ class OrderUpdate(BaseModel):
     status: str
 
 
-class OrderStatusQuery(BaseModel):
-    status: str
-
-
 class UserBase(BaseModel):
     id: int
     username: str
+    is_admin: bool
 
     class Config:
         orm_mode = True
@@ -103,5 +98,3 @@ class User(UserBase):
 class UserUpdate(BaseModel):
     username: Optional[str]
     password: Optional[SecretStr]
-
-

@@ -7,7 +7,7 @@ services:
     volumes:
       - ./:/code
     command: >
-      sh -c "flask db upgrade &&
+      sh -c "sleep 5 && flask db upgrade &&
              flask run --host=0.0.0.0 --port=8000"
 
     env_file:
@@ -20,7 +20,7 @@ services:
   db:
     image: mysql:latest
     volumes:
-      - db_mysql_data:/var/lib/mysql
+      - /data/mysql:/var/lib/mysql
     env_file:
       - .env
     ports:
@@ -33,6 +33,7 @@ services:
 
 
   redis:
+    hostname: redis
     image: "redis:alpine"
     volumes:
       - redis_data:/data
@@ -43,7 +44,7 @@ services:
       dockerfile: Dockerfile
     command: >
       sh -c "flask db upgrade &&
-            celery -A app.celery worker -l INFO "
+            celery -A celery_ worker -l INFO -P solo "
     depends_on:
       - db
       - redis

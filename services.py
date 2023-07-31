@@ -1,18 +1,19 @@
 from sqlalchemy.orm import Session
+from typing import Any
 
 import models
 import schemas
 
 
-def get_all_products(db: Session):
-    return db.query(models.Product).all()
+def get_all_products(db: Session) -> models.Product:
+    return db.query(models.Product).order_by(models.Product.id).all()
 
 
-def get_product_by_id(db: Session, product_id: int):
+def get_product_by_id(db: Session, product_id: int) -> models.Product:
     return db.query(models.Product).filter(models.Product.id == product_id).first()
 
 
-def product_create(db: Session, prod: schemas.ProductCreate):
+def product_create(db: Session, prod: schemas.ProductCreate) -> models.Product:
     db_product = models.Product(
         name=prod.name,
         color=prod.color,
@@ -26,7 +27,10 @@ def product_create(db: Session, prod: schemas.ProductCreate):
     return db_product
 
 
-def product_update(db: Session, product: models.Product, product_update: schemas.ProductUpdate) -> models.Product:
+def product_update(
+        db: Session,
+        product: models.Product,
+        product_update: schemas.ProductUpdate) -> models.Product:
     for field, value in product_update.model_dump(exclude_unset=True).items():
         setattr(product, field, value)
     db.commit()
@@ -39,15 +43,15 @@ def delete_product(db: Session, product: models.Product):
     db.commit()
 
 
-def get_addresses(db: Session):
-    return db.query(models.Address).all()
+def get_addresses(db: Session) -> models.Address:
+    return db.query(models.Address).order_by(models.Address.id).all()
 
 
-def get_address_by_id(db: Session, address_id: int):
+def get_address_by_id(db: Session, address_id: int) -> models.Address:
     return db.query(models.Address).filter(models.Address.id == address_id).first()
 
 
-def address_create(db: Session, address: schemas.AddressCreate):
+def address_create(db: Session, address: schemas.AddressCreate) -> models.Address:
     db_address = models.Address(
         country=address.country,
         city=address.city,
@@ -59,7 +63,9 @@ def address_create(db: Session, address: schemas.AddressCreate):
     return db_address
 
 
-def address_update(db: Session, address: models.Address, address_update: schemas.AddressUpdate) -> models.Address:
+def address_update(
+        db: Session, address: models.Address,
+        address_update: schemas.AddressUpdate) -> models.Address:
     for field, value in address_update.model_dump(exclude_unset=True).items():
         setattr(address, field, value)
     db.commit()
@@ -72,29 +78,28 @@ def delete_address(db: Session, address: models.Address):
     db.commit()
 
 
-def get_orders(db: Session):
+def get_orders(db: Session) -> models.Order:
     return db.query(models.Order).all()
 
 
-def get_order_by_id(db: Session, order_id: int):
+def get_order_by_id(db: Session, order_id: int) -> models.Order:
     return db.query(models.Order).filter(models.Order.id == order_id).first()
 
 
-def get_order_status_by_id(db: Session, order_id: int):
+def get_order_status_by_id(db: Session, order_id: int) -> dict[str: Any]:
     order = db.query(models.Order).filter(models.Order.id == order_id).first()
     if order is None:
         return {"error": "Order not found"}, 404
     return {"status": order.status}
 
 
-def create_order(db: Session, order: schemas.OrderCreate):
+def create_order(db: Session, order: schemas.OrderCreate) -> models.Order:
+
     order_data = order.model_dump()
     product_items_data = order_data.pop("productitems")
 
     order_db = models.Order(**order_data)
     db.add(order_db)
-    db.commit()
-    db.refresh(order_db)
 
     for item in product_items_data:
         product_id = item.get("product_id")
@@ -109,8 +114,6 @@ def create_order(db: Session, order: schemas.OrderCreate):
             db.rollback()
             return None
         product.inventory -= quantity
-        db.commit()
-
         order_item_db = models.OrderItem(**item, order_id=order_db.id)
         db.add(order_item_db)
 
@@ -120,17 +123,16 @@ def create_order(db: Session, order: schemas.OrderCreate):
     return order_db
 
 
-def update_order_status(db: Session, order: models.Order, order_update: schemas.OrderUpdate):
+def update_order_status(
+        db: Session,
+        order: models.Order,
+        order_update: schemas.OrderUpdate) -> dict:
     if isinstance(order_update, dict):
         order_update = schemas.OrderUpdate(**order_update)
 
     order_data = order_update.dict(exclude={"productitems"})
     for key, value in order_data.items():
         setattr(order, key, value)
-
-    # for item_data in order_update.productitems:
-    #     order_item = models.OrderItem(**item_data.dict())
-    #     order.productitems.append(order_item)
 
     db.commit()
     db.refresh(order)
@@ -142,15 +144,15 @@ def delete_order(db: Session, order: models.Order):
     db.commit()
 
 
-def get_order_by_status(db: Session, status: str):
+def get_order_by_status(db: Session, status: str) -> models.Order:
     return db.query(models.Order).filter(models.Order.status == status).all()
 
 
-def get_user_by_username(db: Session, username: str):
+def get_user_by_username(db: Session, username: str) -> models.User:
     return db.query(models.User).filter(models.User.username == username).first()
 
 
-def create_user(db: Session, user: schemas.UserCreate):
+def create_user(db: Session, user: schemas.UserCreate) -> models.Order:
     new_user = models.User(
         username=user.username,
         password=user.password,

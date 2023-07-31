@@ -3,11 +3,11 @@ import os
 from celery_ import app
 from datetime import datetime
 
+
 @app.task
 def track_order_status(order_id, new_status):
     try:
         current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
         project_root = os.path.abspath(os.path.dirname(__file__))
         file_path = os.path.join(project_root, 'order_events.txt')
 

@@ -3,26 +3,17 @@ import secrets
 import time
 from functools import wraps
 
-from typing import Dict
-
 from flask import Flask, g, request, jsonify, redirect, render_template, url_for, session
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
-from flask_sqlalchemy.session import Session
 from flask_jsonrpc import JSONRPC
-from sqlalchemy.exc import IntegrityError
-# from sqlalchemy.testing.suite.test_reflection import users
-from typing_extensions import Union, Optional
 import redis
 
-import schemas
-import services
+import services, schemas
 from database import SessionLocal
 from forms import RegistrationForm
-from models import db, User, Address
+from models import db, Address
 from tasks import track_order_status
-
-
 
 
 try:
@@ -36,9 +27,7 @@ secret_key = secrets.token_hex(32)
 app = Flask(__name__, template_folder='templates')
 jsonrpc = JSONRPC(app, '/json-rpc')
 app.config['SECRET_KEY'] = secret_key
-app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://{os.getenv('MYSQL_USER')}:{os.getenv('MYSQL_PASSWORD')}@{os.getenv('MYSQL_HOST')}:{os.environ.get('MYSQL_PORT')}/{os.getenv('MYSQL_DATABASE')}"
-# app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://user:password@localhost/db_object"
-# app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://{os.getenv('DATABASE_USER')}:{os.getenv('DATABASE_PASSWORD')}@{os.getenv('DATABASE_HOST')}:{os.getenv('DATABASE_PORT')}/{os.getenv('DATABASE_NAME')}"
+app.config["SQLALCHEMY_DATABASE_URI"] = f"mysql+pymysql://{os.getenv('MYSQL_USER')}:{os.getenv('MYSQL_PASSWORD')}@{os.getenv('MYSQL_HOST')}:{os.environ.get('MYSQL_PORT')}/{os.getenv('MYSQL_DATABASE')}" # noqa
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
@@ -81,12 +70,17 @@ def hello_world():
 
 
 @app.route("/products/", methods=["GET"])
-# @login_required
+@login_required
 def get_products():
     with get_db() as db:
         products = services.get_all_products(db)
         products_dicts = [
-            {"id": prod.id, "name": prod.name, "color": prod.color, "weight": prod.weight, "price": prod.price, "inventory": prod.inventory} for prod
+            {"id": prod.id,
+             "name": prod.name,
+             "color": prod.color,
+             "weight": prod.weight,
+             "price": prod.price,
+             "inventory": prod.inventory} for prod
             in products]
         return products_dicts
 
@@ -142,9 +136,7 @@ def update_product(product_id: int):
             product_update = schemas.ProductUpdate(**prod_data)
         except ValueError as e:
             return jsonify({"error": "Invalid data format"}), 400
-
         updated_product = services.product_update(db, prod, product_update)
-
         serialized_product = {
             "id": updated_product.id,
             "name": updated_product.name,
@@ -157,7 +149,7 @@ def update_product(product_id: int):
         return jsonify(serialized_product)
 
 @app.delete("/products/<int:product_id>/")
-# @admin_required
+@admin_required
 def delete_product_route(product_id: int):
     with get_db() as db:
         product = services.get_product_by_id(db, product_id)
@@ -258,7 +250,7 @@ def update_address(address_id: int):
 
 
 @app.delete("/addresses/<int:address_id>/")
-# @admin_required
+@admin_required
 def delete_address_route(address_id: int):
     with get_db() as db:
         address = services.get_address_by_id(db, address_id)
@@ -309,6 +301,7 @@ def get_order_by_id(order_id: int):
 
 
 @app.get("/orders/<int:order_id>/status/")
+# @login_required
 def get_order_status(order_id: int):
     with get_db() as db:
         order = services.get_order_status_by_id(db, order_id)
@@ -335,6 +328,7 @@ def create_order():
 
 
 @app.put("/orders/<int:order_id>/status/")
+@admin_required
 def update_order_status(order_id: int):
     with get_db() as db:
         order = services.get_order_by_id(db, order_id)
@@ -344,12 +338,10 @@ def update_order_status(order_id: int):
         status_data = request.get_json()
         try:
             order_update = schemas.OrderUpdate(**status_data)
-            print(order_update)
         except ValueError as e:
             return jsonify({"error": "Invalid data format"}), 400
 
         updated_order = services.update_order_status(db, order, order_update)
-        print(updated_order)
 
         order_update_dict = order_update.to_dict() if hasattr(order_update, 'to_dict') else order_update.__dict__
 
@@ -358,9 +350,8 @@ def update_order_status(order_id: int):
         return jsonify(updated_order.to_dict()), 200
 
 
-
 @app.delete("/orders/<int:order_id>/")
-# @admin_required
+@admin_required
 def delete_order(order_id: int):
     with get_db() as db:
         order = services.get_order_by_id(db, order_id)
@@ -381,7 +372,6 @@ def get_orders_by_status():
 
     with get_db() as db:
         orders = services.get_order_by_status(db, status_query)
-        print(orders)
         orders_data = []
         for order in orders:
             order_dict = {
@@ -446,6 +436,7 @@ def register():
 
 
 @app.route("/users/<username>/", methods=["GET"])
+@login_required
 def get_user_by_username(username):
     with get_db() as db:
         user = services.get_user_by_username(db, username)
@@ -455,17 +446,19 @@ def get_user_by_username(username):
 
 
 @app.route("/users/<username>/", methods=["PUT"])
+# @login_required
 def update_user_by_username(username):
     user_data = request.json
     with get_db() as db:
         user = services.get_user_by_username(db, username)
         if user:
             updated_user = services.update_user(db, user, schemas.UserUpdate(**user_data))
-            return jsonify({"id": updated_user.id, "username": updated_user.username})
+            return jsonify({"id": updated_user.id, "username": updated_user.username, "is_admin": updated_user.is_admin})   #noqa
         return {"message": "User not found"}, 404
 
 
 @app.route("/users/<username>/", methods=["DELETE"])
+@admin_required
 def delete_user_by_username(username):
     with get_db() as db:
         user = services.get_user_by_username(db, username)
