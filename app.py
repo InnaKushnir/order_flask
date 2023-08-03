@@ -328,7 +328,7 @@ def create_order():
 
 
 @app.put("/orders/<int:order_id>/status/")
-@admin_required
+# @admin_required
 def update_order_status(order_id: int):
     with get_db() as db:
         order = services.get_order_by_id(db, order_id)
@@ -351,7 +351,7 @@ def update_order_status(order_id: int):
 
 
 @app.delete("/orders/<int:order_id>/")
-@admin_required
+# @admin_required
 def delete_order(order_id: int):
     with get_db() as db:
         order = services.get_order_by_id(db, order_id)
